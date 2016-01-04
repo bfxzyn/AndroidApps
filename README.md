@@ -8,6 +8,9 @@ Complete pre-work stories:
 - [x] Required: Submit todo app for review via Github
 - [x] Required: Extend your todo app, improve UI, add features(Add Splash screen, customized icon)
 
+Walkthrough of all user stories:
+
+![Video Walkthrough](SimpleTodoApp.gif)
 
 
 GIF created with LiceCap.
