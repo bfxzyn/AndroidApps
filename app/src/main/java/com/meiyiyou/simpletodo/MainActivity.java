@@ -10,6 +10,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.meiyiyou.simpletodo.com.meiyiyou.simpletodo.model.Item;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -29,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         lvItems = (ListView) findViewById(R.id.lvItems);
         items = new ArrayList<String>();
-        readItems();
+        items = Item.showAllItems();
         itemAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_expandable_list_item_1, items);
         lvItems.setAdapter(itemAdapter);
         setupListViewListener();
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         String itemText = etNewItem.getText().toString();
         itemAdapter.add(itemText);
         etNewItem.setText("");
-        writeItems();
+        Item.saveItems(items);
     }
 
     public void setupListViewListener(){
@@ -51,12 +53,13 @@ public class MainActivity extends AppCompatActivity {
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                         items.remove(position);
                         itemAdapter.notifyDataSetChanged();
-                        writeItems();
+                        Item.saveItems(items);
                         return true;
                     }
                 });
     }
 
+    @Deprecated
     private void readItems() {
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.txt");
@@ -67,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Deprecated
     public void writeItems(){
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.txt");
@@ -96,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             int newItemPosition = data.getExtras().getInt("position");
             items.set(newItemPosition, newItemText);
             itemAdapter.notifyDataSetChanged();
-            writeItems();
+            Item.saveItems(items);
         }
     }
 
