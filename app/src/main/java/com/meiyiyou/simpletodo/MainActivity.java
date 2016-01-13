@@ -1,8 +1,11 @@
 package com.meiyiyou.simpletodo;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -11,6 +14,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.meiyiyou.simpletodo.com.meiyiyou.simpletodo.model.Item;
+import com.meiyiyou.simpletodo.com.meiyiyou.simpletodo.model.ItemsAdapter;
 
 import org.apache.commons.io.FileUtils;
 
@@ -18,11 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private ListView lvItems;
-    private ArrayList<String> items;
-    private ArrayAdapter<String> itemAdapter;
+    private ArrayList<Item> items;
+    private ArrayAdapter<Item> itemAdapter;
     private final int REQUEST_CODE = 20;
 
     @Override
@@ -30,20 +34,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lvItems = (ListView) findViewById(R.id.lvItems);
-        items = new ArrayList<String>();
+        items = new ArrayList<Item>();
         items = Item.showAllItems();
-        itemAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_expandable_list_item_1, items);
+        itemAdapter = new ItemsAdapter(this, items);
         lvItems.setAdapter(itemAdapter);
         setupListViewListener();
-        launchEditItemActivity();
-    }
-
-    public void onAddItem(View v){
-        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
-        String itemText = etNewItem.getText().toString();
-        itemAdapter.add(itemText);
-        etNewItem.setText("");
-        Item.saveItems(items);
+        launchTaskDetailsActivity();
     }
 
     public void setupListViewListener(){
@@ -59,49 +55,55 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    @Deprecated
-    private void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        }catch(IOException e){
-            items = new ArrayList<String>();
-        }
-    }
 
-    @Deprecated
-    public void writeItems(){
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try{
-            FileUtils.writeLines(todoFile, items);
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void launchEditItemActivity(){
+    public void launchTaskDetailsActivity(){
         lvItems.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Intent editItemIntent = new Intent(MainActivity.this, EditItemActivity.class);
-                        editItemIntent.putExtra("position", position);
-                        editItemIntent.putExtra("text", items.get(position));
-                        startActivityForResult(editItemIntent, REQUEST_CODE);
+                        Intent taskDetailsIntent = new Intent(MainActivity.this, TaskDetailsActivity.class);
+                        taskDetailsIntent.putExtra("taskName", items.get(position).itemName);
+                        taskDetailsIntent.putExtra("position", position);
+                        taskDetailsIntent.putExtra("taskDueDateDay",items.get(position).itemDueDateDay);
+                        taskDetailsIntent.putExtra("taskDueDateMonth", items.get(position).itemDueDateMonth);
+                        taskDetailsIntent.putExtra("taskDueDateYear", items.get(position).itemDueDateYear);
+                        taskDetailsIntent.putExtra("taskPriority", items.get(position).itemPriority);
+                        startActivityForResult(taskDetailsIntent, REQUEST_CODE);
+
                     }
                 });
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if(resultCode == RESULT_OK && requestCode == REQUEST_CODE){
-            String newItemText = data.getExtras().getString("text");
+            String newItemText = data.getExtras().getString("taskName");
             int newItemPosition = data.getExtras().getInt("position");
-            items.set(newItemPosition, newItemText);
+            String newItemPriority = data.getExtras().getString("taskPriority");
+            int taskDueDateDay = data.getIntExtra("taskDueDateDay", -1);
+            int taskDueMonth = data.getIntExtra("taskDueDateMonth", -1);
+            int taskDueDateYear = data.getIntExtra("taskDueDateYear", -1);
+            Item itemTemp = new Item(newItemText, taskDueDateDay, taskDueMonth, taskDueDateYear, newItemPriority);
+            items.add(newItemPosition, itemTemp);
             itemAdapter.notifyDataSetChanged();
             Item.saveItems(items);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        if(item.getItemId() == R.id.action_EditItem){
+            Intent editItemIntent = new Intent(MainActivity.this, NewTaskActivity.class);
+            editItemIntent.putExtra("position", items.size());
+            startActivityForResult(editItemIntent, REQUEST_CODE);
+        }
+        return true;
     }
 
 }
