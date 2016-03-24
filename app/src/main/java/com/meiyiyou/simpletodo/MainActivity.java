@@ -47,9 +47,10 @@ public class MainActivity extends Activity {
                 new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        items.remove(position);
+                        Item item = itemAdapter.getItem(position);
+                        itemAdapter.remove(item);
                         itemAdapter.notifyDataSetChanged();
-                        Item.saveItems(items);
+                        item.delete();
                         return true;
                     }
                 });
@@ -77,15 +78,15 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if(resultCode == RESULT_OK && requestCode == REQUEST_CODE){
             String newItemText = data.getExtras().getString("taskName");
-            int newItemPosition = data.getExtras().getInt("position");
+            //int newItemPosition = data.getExtras().getInt("position");
             String newItemPriority = data.getExtras().getString("taskPriority");
             int taskDueDateDay = data.getIntExtra("taskDueDateDay", -1);
             int taskDueMonth = data.getIntExtra("taskDueDateMonth", -1);
             int taskDueDateYear = data.getIntExtra("taskDueDateYear", -1);
-            Item itemTemp = new Item(newItemText, taskDueDateDay, taskDueMonth, taskDueDateYear, newItemPriority);
-            items.add(newItemPosition, itemTemp);
+            Item item = new Item(newItemText, taskDueDateDay, taskDueMonth, taskDueDateYear, newItemPriority);
+            item.save();
+            itemAdapter.add(item);
             itemAdapter.notifyDataSetChanged();
-            Item.saveItems(items);
         }
     }
 
